@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>STUDENT REGISTRATIE</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="dropdown.css">
+    <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+
+    <script>
+        function includeHTML() {
+            var z, i, elmnt, file, xhttp;
+            /*loop through a collection of all HTML elements:*/
+            z = document.getElementsByTagName("*");
+            for (i = 0; i < z.length; i++) {
+                elmnt = z[i];
+                /*search for elements with a certain atrribute:*/
+                file = elmnt.getAttribute("w3-include-html");
+                if (file) {
+                    /*make an HTTP request using the attribute value as the file name:*/
+                    xhttp = new XMLHttpRequest();
+                    xhttp.onreadystatechange = function() {
+                        if (this.readyState == 4) {
+                            if (this.status == 200) {elmnt.innerHTML = this.responseText;}
+                            if (this.status == 404) {elmnt.innerHTML = "Page not found.";}
+                            /*remove the attribute, and call this function once more:*/
+                            elmnt.removeAttribute("w3-include-html");
+                            includeHTML();
+                        }
+                    }
+                    xhttp.open("GET", file, true);
+                    xhttp.send();
+                    /*exit the function:*/
+                    return;
+                }
+            }
+        };
+    </script>
+</head>
+
+<body>
+<div w3-include-html="menubar.html"></div>
+
+<script>
+    includeHTML();
+</script>
+
+<div>
+    <h1 class="textReg" >Student Registratie</h1>
+    <div class="w3-container w3-half centerReg w3-margin-top">
+
+        <p>
+            <input id="studentId" class="w3-input" type="hidden" style="width:90%"></p>
+
+        <p>
+            <label>Voornaam</label>
+            <input id="voornaam" class="w3-input" type="text" style="width:90%" required></p>
+        <p>
+            <label>Achternaam</label>
+            <input id="achternaam" class="w3-input" type="text" style="width:90%" required></p>
+        <p>
+            <label>Adres</label>
+            <input id="adres" class="w3-input" type="text" style="width:90%" required></p>
+        <p>
+            <label>Telefoon</label>
+            <input id="telefoon" class="w3-input" type="text" style="width:90%" required></p>
+        <p>
+            <label>ID</label>
+            <input id="idNummer" class="w3-input" type="text" style="width:90%" required></p>
+
+        <div class="dropdown">
+            <label>Identificatie Type</label>
+            <p><select id ="identificatieTypeDropdown" style="width: 100%; margin-bottom: 2px">
+                <option id="identificatieTypeId" disabled selected>Select Identificatie Type</option>
+            </select></p>
+
+            <label>Status</label>
+            <p><select id = "statusdropdown" style="width: 100%; margin-bottom: 2px">
+                <option id="statusId" disabled selected>Select Status</option>
+            </select></p>
+        </div>
+        <p>
+            <button id="btnSaveStudent" onclick="saveStudent()" class="w3-button w3-section buttonAdd w3-ripple"> Add Student </button></p>
+
+    </div>
+</div>
+
+
+<div>
+    <div id="studentData" class="w3-container"></div>
+</div>
+
+
+<script>
+    clearInputFields();
+    loadStudentList();
+    loadIdentificatieTypes();
+    loadStatus();
+
+    function loadStudentList() {
+        let URL = "http://localhost:7070/studentcomplex/api/students/list";
+
+        let xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function () {
+            if (this.readyState == 4 && this.status == 200) {
+                let studentDataList = JSON.parse(this.responseText);
+                let studentList = ' <ul class="w3-ul w3-card-4"> ';
+
+                studentDataList.reverse();
+
+                for (let index = 0; index < studentDataList.length; index++) {
+                    studentList +=
+                        ' <li class="w3-bar"> ' +
+
+                        ' <button id= ' + studentDataList[index].studentId + ' onclick="editStudent(this.id)" ' +
+                        ' class="w3-bar-item w3-button w3-small w3-right">Edit</button> ' +
+
+                        ' <button id=' + studentDataList[index].studentId + ' onclick="removeStudent(this.id)" ' +
+                        ' class="w3-bar-item w3-button w3-small w3-right">Remove</button> ' +
+
+                        ' <img src="images/person-icon.png" class="w3-bar-item w3-circle w3-hide-small" style="width:85px"> ' +
+                        ' <div class="w3-bar-item"> ' +
+                        "<span>Student: " + studentDataList[index].voornaam + " " + studentDataList[index].achternaam + "</span><br/>" +
+                        "<span>Adres: " + studentDataList[index].adres + "</span><br/>" +
+                        "<span>Telefoon: " + studentDataList[index].telefoon + "</span><br/>" +
+                        "<span>ID: " + studentDataList[index].idNummer + "</span><br/>" +
+                        "<span>Identificatie Type: " + studentDataList[index].identificatieType.identificatieType + "</span><br/>" +
+                        "<span>Status: " + studentDataList[index].status.status + "</span><br/>" +
+                        ' </div> ';
+                }
+                studentList += "</ul>";
+                document.getElementById("studentData").innerHTML = studentList;
+            }
+        };
+        xhttp.open("GET", URL, true);
+        xhttp.send();
+    }
+
+    function addStudent(){
+        let studentId = document.getElementById("studentId").value;
+        let voornaam = document.getElementById("voornaam").value;
+        let achternaam = document.getElementById("achternaam").value;
+        let adres = document.getElementById("adres").value;
+        let telefoon = document.getElementById("telefoon").value;
+        let idNummer = document.getElementById("idNummer").value;
+        let identificatieTypeId = document.getElementById("identificatieTypeDropdown").value;
+        let statusId = document.getElementById("statusdropdown").value;
+
+        let dataString = {
+            "studentId": null,
+            "voornaam": voornaam,
+            "achternaam": achternaam,
+            "adres": adres,
+            "telefoon": telefoon,
+            "idNummer": idNummer,
+            "identificatieType": {"identificatieTypeId": identificatieTypeId, "identificatieType": document.getElementById("identificatieTypeDropdown").text},
+            "status": {"statusId": statusId, "status": document.getElementById("statusdropdown").text}
+        }
+        let json = JSON.stringify(dataString)
+
+        let xhttp = new XMLHttpRequest();
+        xhttp.open("POST", "http://localhost:7070/studentcomplex/api/students/add", true);
+        xhttp.onreadystatechange = function() {
+            if (xhttp.readyState>3 && xhttp.status==200) { loadStudentList(); clearInputFields();}
+        };
+        xhttp.setRequestHeader("Content-Type", "application/json");
+        xhttp.send(json);
+    }
+
+    function loadIdentificatieTypes() {
+        let URL = "http://localhost:7070/studentcomplex/api/identificatieTypes/list";
+
+        let select = document.getElementById("identificatieTypeDropdown");
+
+        let xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function () {
+            if (this.readyState == 4 && this.status == 200) {
+                let identificatieTypesDataList = JSON.parse(this.responseText);
+                for (let index = 0; index < identificatieTypesDataList.length; index++) {
+                    let option = document.createElement("OPTION");
+                    option.text = identificatieTypesDataList[index].identificatieType;
+                    option.value = identificatieTypesDataList[index].identificatieTypeId;
+                    select.add(option);
+                }
+            }
+        };
+        xhttp.open("GET", URL, true);
+        xhttp.send();
+    }
+
+    function loadStatus() {
+        let URL = "http://localhost:7070/studentcomplex/api/status/list";
+
+        let select = document.getElementById("statusdropdown");
+
+        let xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function () {
+            if (this.readyState == 4 && this.status == 200) {
+                let statusDataList = JSON.parse(this.responseText);
+                for (let index = 0; index < statusDataList.length; index++) {
+                    let option = document.createElement("OPTION");
+                    option.text = statusDataList[index].status;
+                    option.value = statusDataList[index].statusId;
+                    select.add(option);
+                }
+            }
+        };
+        xhttp.open("GET", URL, true);
+        xhttp.send();
+    }
+
+    function updateStudent() {
+        let studentId = document.getElementById("studentId").value;
+        let voornaam = document.getElementById("voornaam").value;
+        let achternaam = document.getElementById("achternaam").value;
+        let adres = document.getElementById("adres").value;
+        let telefoon = document.getElementById("telefoon").value;
+        let idNummer = document.getElementById("idNummer").value;
+        let identificatieTypeId = document.getElementById("identificatieTypeDropdown").value;
+        let statusId = document.getElementById("statusdropdown").value;
+
+        let dataString = {
+            "studentId": studentId,
+            "voornaam": voornaam,
+            "achternaam": achternaam,
+            "adres": adres,
+            "telefoon": telefoon,
+            "idNummer": idNummer,
+            "identificatieType": {"identificatieTypeId": identificatieTypeId, "identificatieType": document.getElementById("identificatieTypeDropdown").text},
+            "status": {"statusId": statusId, "status": document.getElementById("statusdropdown").text}
+        }
+        let json = JSON.stringify(dataString)
+
+        var xmlhttp = new XMLHttpRequest();
+        xmlhttp.open("POST", "http://localhost:7070/studentcomplex/api/students/update", true);
+
+        xmlhttp.onreadystatechange = function() {
+            if (xmlhttp.readyState>3 && xmlhttp.status==200) {
+                loadStudentList();
+                clearInputFields();
+                document.getElementById("btnSaveStudent").innerHTML = "Add Student";}
+        };
+        xmlhttp.setRequestHeader("Content-Type", "application/json");
+        xmlhttp.send(json);
+    }
+
+    function getStudent(studentId) {
+
+        let voornaam = document.getElementById("voornaam").value;
+        let achternaam = document.getElementById("achternaam").value;
+        let adres = document.getElementById("adres").value;
+        let telefoon = document.getElementById("telefoon").value;
+        let idNummer = document.getElementById("idNummer").value;
+        let identificatieTypeId = document.getElementById("identificatieTypeDropdown").value;
+        let statusId = document.getElementById("statusdropdown").value;
+
+        let dataString = {
+            "studentId": studentId,
+            "voornaam": voornaam,
+            "achternaam": achternaam,
+            "adres": adres,
+            "telefoon": telefoon,
+            "idNummer": idNummer,
+            "identificatieType": {"identificatieTypeId": identificatieTypeId, "identificatieType": document.getElementById("identificatieTypeDropdown").text},
+            "status": {"statusId": statusId, "status": document.getElementById("statusdropdown").text}
+        }
+
+        let json = JSON.stringify(dataString)
+
+        let xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function () {
+            if (xhttp.readyState>3 && xhttp.status==200) {
+                let foundStudent = JSON.parse(this.responseText);
+
+                document.getElementById("studentId").value = foundStudent.studentId;
+                document.getElementById("voornaam").value = foundStudent.voornaam;
+                document.getElementById("achternaam").value = foundStudent.achternaam;
+                document.getElementById("adres").value = foundStudent.adres;
+                document.getElementById("telefoon").value = foundStudent.telefoon;
+                document.getElementById("idNummer").value = foundStudent.idNummer;
+                document.getElementById("identificatieTypeDropdown").value = foundStudent.identificatieType;
+                document.getElementById("statusdropdown").value = foundStudent.status;
+
+                document.getElementById("btnSaveStudent").innerHTML = "Update Student";
+            }
+        };
+        xhttp.open("POST", "http://localhost:7070/studentcomplex/api/students/getStudent", true);
+
+        xhttp.setRequestHeader("Content-Type", "application/json");
+        xhttp.send(json);
+    }
+
+    function editStudent(studentId) {
+        getStudent(studentId);
+    }
+
+    function saveStudent() {
+        if(validateForm())
+        {
+            if(document.getElementById("btnSaveStudent").innerHTML == 'Add Student') {
+                addStudent();
+            }else{
+                updateStudent();
+            }
+        }
+    }
+
+    function removeStudent(studentId) {
+        if ( confirm("Are you sure you want to delete this student?") ) {
+            deleteStudent(studentId);
+        }
+    }
+
+    function deleteStudent(studentId) {
+
+        let voornaam = document.getElementById("voornaam").value;
+        let achternaam = document.getElementById("achternaam").value;
+        let adres = document.getElementById("adres").value;
+        let telefoon = document.getElementById("telefoon").value;
+        let idNummer = document.getElementById("idNummer").value;
+        let identificatieTypeId = document.getElementById("identificatieTypeDropdown").value;
+        let statusId = document.getElementById("statusdropdown").value;
+
+        let dataString = {
+            "studentId": studentId,
+            "voornaam": voornaam,
+            "achternaam": achternaam,
+            "adres": adres,
+            "telefoon": telefoon,
+            "idNummer": idNummer,
+            "identificatieType": {"identificatieTypeId": identificatieTypeId, "identificatieType": document.getElementById("identificatieTypeDropdown").text},
+            "status": {"statusId": statusId, "status": document.getElementById("statusdropdown").text}
+        }
+
+        let json = JSON.stringify(dataString)
+
+        var xhttp = new XMLHttpRequest();
+        xhttp.open("POST", "http://localhost:7070/studentcomplex/api/students/remove", true);
+
+        xhttp.onreadystatechange = function() {
+            if (xhttp.readyState>3 && xhttp.status==200) { loadStudentList(); }
+        };
+        xhttp.setRequestHeader("Content-Type", "application/json");
+        xhttp.send(json);
+    }
+
+    function validateForm() {
+        let pass = true;
+        let voornaam = document.getElementById("voornaam").value;
+        let achternaam = document.getElementById("achternaam").value;
+        let adres = document.getElementById("adres").value;
+        let telefoon = document.getElementById("telefoon").value;
+        let idNummer = document.getElementById("idNummer").value;
+        let identificatieType = document.getElementById("identificatieTypeDropdown").value;
+        let status = document.getElementById("statusdropdown").value;
+
+        if (voornaam == "" || achternaam == "" || adres == "" || telefoon == "" || idNummer == "" || identificatieType == "" || status == "")
+        {
+            alert("Please fill in all the fields.");
+            pass = false;
+        }
+
+        return pass;
+    }
+
+    function clearInputFields() {
+
+        document.getElementById("studentId").value = "";
+        document.getElementById("voornaam").value = "";
+        document.getElementById("achternaam").value = "";
+        document.getElementById("adres").value = "";
+        document.getElementById("telefoon").value = "";
+        document.getElementById("idNummer").value = "";
+        document.getElementById("identificatieTypeDropdown").value = "";
+        document.getElementById("statusdropdown").value = "";
+        document.getElementById("btnSaveStudent").innerHTML = "Add Student";
+    }
+</script>
+
+</body>
+</html>

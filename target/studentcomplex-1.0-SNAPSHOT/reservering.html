@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>RESERVERING REGISTRATIE</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="dropdown.css">
+    <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+
+    <script>
+        function includeHTML() {
+            var z, i, elmnt, file, xhttp;
+            /*loop through a collection of all HTML elements:*/
+            z = document.getElementsByTagName("*");
+            for (i = 0; i < z.length; i++) {
+                elmnt = z[i];
+                /*search for elements with a certain atrribute:*/
+                file = elmnt.getAttribute("w3-include-html");
+                if (file) {
+                    /*make an HTTP request using the attribute value as the file name:*/
+                    xhttp = new XMLHttpRequest();
+                    xhttp.onreadystatechange = function() {
+                        if (this.readyState == 4) {
+                            if (this.status == 200) {elmnt.innerHTML = this.responseText;}
+                            if (this.status == 404) {elmnt.innerHTML = "Page not found.";}
+                            /*remove the attribute, and call this function once more:*/
+                            elmnt.removeAttribute("w3-include-html");
+                            includeHTML();
+                        }
+                    }
+                    xhttp.open("GET", file, true);
+                    xhttp.send();
+                    /*exit the function:*/
+                    return;
+                }
+            }
+        };
+    </script>
+</head>
+
+<body>
+<div w3-include-html="menubar.html"></div>
+
+<script>
+    includeHTML();
+</script>
+
+<div>
+    <h1 class="textReg" >Reservering Registratie</h1>
+    <div class="w3-container w3-half centerRegRes w3-margin-top">
+        <div class="dropdown">
+
+            <p>
+                <input id="reserveringId" class="w3-input" type="hidden" style="width:90%"></p>
+
+            <label>Student</label>
+            <p><select id = "students" style="width: 100%; margin-bottom: 2px">
+                <option id="studentId" disabled selected>Select Student</option>
+            </select></p>
+
+            <label>Type</label>
+            <p><select id = "typedropdown" onchange="listKamersByType(document.getElementById('kamers'))" style="width: 100%; margin-bottom: 2px">
+                <option id="typeId" disabled selected>Select Type Kamer</option>
+            </select></p>
+
+            <label>Kamer</label>
+            <p><select id = "kamers" style="width: 100%; margin-bottom: 2px">
+                <option id="kamerId" disabled selected>Select Kamer</option>
+            </select></p>
+
+            <p>
+                <label>Check-in Date</label>
+                <input type="date" id="checkinDate" class="w3-input" style="width:90%" required></p>
+            <p>
+                <label>Check-out Date</label>
+                <input type="date" id="checkoutDate" class="w3-input" style="width:90%" required></p>
+
+            <label>Status</label>
+            <p><select id = "statusdropdown" style="width: 100%; margin-bottom: 2px">
+                <option id="statusId" disabled selected>Select Status</option>
+            </select></p>
+        </div>
+
+        <p>
+            <button id="btnSaveReservering" onclick="addReservering()" class="w3-button w3-section buttonAdd w3-ripple"> Add Reservering </button></p>
+
+    </div>
+</div>
+
+<div>
+    <div id="reserveringData" class="w3-container"></div>
+</div>
+
+<script>
+
+    loadReserveringen();
+    loadStudents();
+    loadTypes();
+    loadStatus();
+
+    function loadReserveringen() {
+        let URL = "http://localhost:7070/studentcomplex/api/reserveringen/list";
+
+        let xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function () {
+            if (this.readyState == 4 && this.status == 200) {
+                let reserveringDataList = JSON.parse(this.responseText);
+                let reserveringList = ' <ul class="w3-ul w3-card-4"> ';
+
+                reserveringDataList.reverse();
+
+                for (let index = 0; index < reserveringDataList.length; index++) {
+                    reserveringList +=
+                        ' <li class="w3-bar"> ' +
+
+                        ' <div class="w3-bar-item"> ' +
+                        "<span>Kamer: " + reserveringDataList[index].kamer.kamer + "</span><br/>" +
+                        "<span>Student: " + reserveringDataList[index].student.voornaam + " " + reserveringDataList[index].student.achternaam + "</span><br/>" +
+                        "<span>Check-in Date: " + new Date(reserveringDataList[index].checkinDate) + "</span><br/>" +
+                        "<span>Check-out Date: " + new Date(reserveringDataList[index].checkoutDate) + "</span><br/>" +
+                        ' </div> ';
+                }
+                reserveringList += "</ul>";
+                document.getElementById("reserveringData").innerHTML = reserveringList;
+            }
+        };
+        xhttp.open("GET", URL, true);
+        xhttp.send();
+    }
+
+    function addReservering(){
+        let reserveringId = document.getElementById("reserveringId").value;
+        let studentId = document.getElementById("students").value;
+        let kamerId = document.getElementById("kamers").value;
+        let checkinDate = document.getElementById("checkinDate").value;
+        let checkoutDate = document.getElementById("checkoutDate").value;
+        let statusId = document.getElementById("statusdropdown").value;
+
+        let data = {
+            "reserveringId": null,
+            "student":{"studentId": studentId,
+                "voornaam": document.getElementById("students").text,
+                "achternaam": document.getElementById("students").text,
+                "status": {"statusId": statusId,
+                    "status": document.getElementById("statusdropdown").text}},
+            "kamer":  {"kamerId": kamerId,
+                "kamer": document.getElementById("kamers").text,
+                "type": document.getElementById("kamers").text},
+            "checkinDate": checkinDate,
+            "checkoutDate": checkoutDate
+        }
+        let json = JSON.stringify(data)
+
+        let xhttp = new XMLHttpRequest();
+        xhttp.open("POST", "http://localhost:7070/studentcomplex/api/reserveringen/add", true);
+
+        xhttp.onreadystatechange = function() {
+            if (xhttp.readyState>3 && xhttp.status==200) { loadReserveringen(); clearInputFields();}
+        };
+        xhttp.setRequestHeader("Content-Type", "application/json");
+        xhttp.send(json);
+    }
+
+    function loadStudents() {
+        let URL = "http://localhost:7070/studentcomplex/api/students/list";
+
+
+        let select = document.getElementById("students");
+
+        let xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function () {
+            if (this.readyState == 4 && this.status == 200) {
+                let studentDataList = JSON.parse(this.responseText);
+                for (let index = 0; index < studentDataList.length; index++) {
+                    let option = document.createElement("OPTION");
+                    option.text = studentDataList[index].achternaam + ", " + studentDataList[index].voornaam;
+                    option.value = studentDataList[index].studentId;
+                    select.add(option);
+                }
+            }
+        };
+        xhttp.open("GET", URL, true);
+        xhttp.send();
+    }
+
+    function loadTypes() {
+        let URL = "http://localhost:7070/studentcomplex/api/types/list";
+
+
+        let select = document.getElementById("typedropdown");
+
+        let xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function () {
+            if (this.readyState == 4 && this.status == 200) {
+                let typeDataList = JSON.parse(this.responseText);
+                for (let index = 0; index < typeDataList.length; index++) {
+                    let option = document.createElement("OPTION");
+                    option.text = typeDataList[index].type;
+                    option.value = typeDataList[index].typeId;
+                    select.add(option);
+                }
+            }
+        };
+        xhttp.open("GET", URL, true);
+        xhttp.send();
+    }
+
+    function loadKamers() {
+        let URL = "http://localhost:7070/studentcomplex/api/kamers/list";
+
+
+        let select = document.getElementById("kamers");
+
+        let xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function () {
+            if (this.readyState == 4 && this.status == 200) {
+                let kamerDataList = JSON.parse(this.responseText);
+                for (let index = 0; index < kamerDataList.length; index++) {
+                    let option = document.createElement("OPTION");
+                    option.text = kamerDataList[index].type;
+                    option.text = kamerDataList[index].kamer;
+                    option.value = kamerDataList[index].kamerId;
+                    select.add(option);
+                }
+            }
+        };
+        xhttp.open("GET", URL, true);
+        xhttp.send();
+    }
+
+    function listKamersByType(ddl) {
+
+        let typeId = document.getElementById("typedropdown").value;
+
+        let dataString = {
+            "type": {"typeId": typeId, "type": document.getElementById("typedropdown").text}
+        }
+        let json = JSON.stringify(dataString)
+
+        let xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function () {
+            if (this.readyState == 4 && this.status == 200) {
+
+                document.getElementById("kamers").innerHTML = "";
+
+                let kamerDataList = JSON.parse(this.responseText);
+                for (let index = 0; index < kamerDataList.length; index++) {
+                    let option = document.createElement("OPTION");
+                    option.text = kamerDataList[index].type;
+                    option.text = kamerDataList[index].kamer;
+                    option.value = kamerDataList[index].kamerId;
+                    ddl.add(option);
+                }
+            }
+        };
+        xhttp.open("POST", "http://localhost:7070/studentcomplex/api/kamers/listKamersByType", true);
+
+        xhttp.setRequestHeader("Content-Type", "application/json");
+        xhttp.send(json);
+    }
+
+    function loadStatus() {
+        let URL = "http://localhost:7070/studentcomplex/api/status/list";
+
+        let select = document.getElementById("statusdropdown");
+
+        let xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function () {
+            if (this.readyState == 4 && this.status == 200) {
+                let statusDataList = JSON.parse(this.responseText);
+                for (let index = 0; index < statusDataList.length; index++) {
+                    let option = document.createElement("OPTION");
+                    option.text = statusDataList[index].status;
+                    option.value = statusDataList[index].statusId;
+                    select.add(option);
+                }
+            }
+        };
+        xhttp.open("GET", URL, true);
+        xhttp.send();
+    }
+
+    function clearInputFields() {
+
+        document.getElementById("reserveringId").value = "";
+        document.getElementById("students").value = "";
+        document.getElementById("kamers").value = "";
+        document.getElementById("checkinDate").value = "";
+        document.getElementById("checkoutDate").value = "";
+        document.getElementById("statusdropdown").value = "";
+        document.getElementById("btnSaveReservering").innerHTML = "Add Reservering";
+    }
+
+</script>
+
+</body>
+</html>
