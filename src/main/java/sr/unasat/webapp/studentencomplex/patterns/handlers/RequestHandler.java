@@ -22,4 +22,6 @@ public abstract class RequestHandler {
             successor.processRequest(request);
         }
     }
+
+    //recieve object -> pass request along the chain till object handles it
 }

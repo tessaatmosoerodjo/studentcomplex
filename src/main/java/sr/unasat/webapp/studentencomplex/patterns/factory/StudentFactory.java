@@ -18,4 +18,7 @@ public class StudentFactory {
         }
         return null;
     }
+
+    //Factory provides interface for creating objects, but allow subclasses to alter type of obj.
+    //create object without exposing creation logic
 }

@@ -27,4 +27,8 @@ public class TypesController {
         return typesDAO.getType(type.getTypeId());
     }
 
+    //GET - request data
+    //POST - send data to server to create/update resource
+    //PRODUCES - Framework use Json output
+    //CONSUMES - Json input format
 }

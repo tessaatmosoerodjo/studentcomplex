@@ -46,7 +46,7 @@ public class StudentDAO {
     }
 
     public Students[] geStudentByName(String voornaam, String achternaam) {
-
+//to see if student exits
         List<Students> student = new ArrayList<>();
         EntityManager manager = ENTITY_MANAGER_FACTORY.createEntityManager();
         EntityTransaction transaction = null;
@@ -56,10 +56,10 @@ public class StudentDAO {
             transaction.begin();
             student = manager.createQuery("SELECT s FROM Students s WHERE voornaam = '"+voornaam+"' AND achternaam = '"+achternaam+"'").getResultList();
             transaction.commit();
-
+//Closing the transaction
             if (student != null) {
-                for (Students customer : student) {
-                    if (customer.getVoornaam().equals(voornaam) && customer.getAchternaam().equals(achternaam)) {
+                for (Students students : student) {
+                    if (students.getVoornaam().equals(voornaam) && students.getAchternaam().equals(achternaam)) {
                         return (student.toArray(new Students[0]));
                     }
                 }
@@ -71,6 +71,7 @@ public class StudentDAO {
             ex.printStackTrace();
         } finally {
             manager.close();
+            //releasing the factory resources
         }
         return null;
     }
@@ -106,6 +107,7 @@ public class StudentDAO {
             transaction = manager.getTransaction();
             transaction.begin();
             manager.merge(student);
+            //Merge the state of the given entity into the current persistence context.
             transaction.commit();
             isUpdated = true;
         } catch (Exception ex) {
